@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NotesQuestion xmlns="com.quintiles.views.components.reportQuestions.*" width="100%" xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:code="http://code.google.com/p/flexlib/" xmlns:modals="com.quintiles.views.components.modals.*"
+    creationComplete="creationCompleteHandler()"
+    xmlns:itemRenderers="com.quintiles.views.components.reportQuestions.itemRenderers.*">
+
+    <mx:Script>
+        <![CDATA[
+        	import com.quintiles.vo.ReportAnswerVO;
+        	import mx.controls.Alert;
+            import com.quintiles.utils.StringUtils;
+            import com.quintiles.utils.SqlUtils;
+            import com.quintiles.views.components.reportQuestions.model.SrapExcalationPlanModel;
+
+            import mx.collections.ArrayCollection;
+
+			            /** Selection Collection **/
+            [Bindable]
+            public var escalationWeeks:ArrayCollection;
+
+            /** Addtional information selections **/
+            [Bindable]
+            public var escalationEvents:ArrayCollection;
+
+            /** Collection of addtional rows **/
+            [Bindable]
+            private var rows:ArrayCollection = new ArrayCollection();
+
+
+            /**
+             * Creataion Complete event handler
+             */
+           /*  private function creationCompleteHandler():void {
+                var beingCreatedDataProvider:ArrayCollection = new ArrayCollection();
+
+                if (StringUtils.hasValue(reportQuestion.questionAnswer)) {
+                    var answers:Array = reportQuestion.questionAnswer.split(SqlUtils.SET_DELIMITER);
+
+                    for each (var answer:String in answers) {
+                        var date:String = answer.split(SqlUtils.VALUE_DELIMITER)[0];
+                        var step:String = answer.split(SqlUtils.VALUE_DELIMITER)[1];
+                        var other:String = answer.split(SqlUtils.VALUE_DELIMITER)[2];
+                        beingCreatedDataProvider.addItem(createNewRow(date, step, other));
+                    }
+                }
+
+                if (beingCreatedDataProvider.length == 0) {
+                    beingCreatedDataProvider.addItem(createNewRow("", "", ""));
+                }
+                rows = beingCreatedDataProvider;
+            } */
+
+			private function creationCompleteHandler():void {
+                var beingCreatedDataProvider:ArrayCollection = new ArrayCollection();
+
+                if (reportQuestion.answers && reportQuestion.answers.length > 2) {
+                    // the first one is date, the second one is step, if the step is "Other", the the third will be comments
+                    var i:int = 0;
+                    var total:int = reportQuestion.answers.length;
+                    while (i<total) {
+                      var dateAnswerVO:ReportAnswerVO = reportQuestion.answers[i] as ReportAnswerVO;
+                        var date:String = dateAnswerVO.questionAnswer;
+                        i ++ ;
+                        var stepAnswerVO:ReportAnswerVO = reportQuestion.answers[i] as ReportAnswerVO;
+                        var step:String = stepAnswerVO.questionAnswer;
+                        i++;
+                        var answer:String = "";
+                        if(step == "Other" && i<total) {
+                            var answerVO:ReportAnswerVO = reportQuestion.answers[i] as ReportAnswerVO;
+                            answer = answerVO.questionAnswer;
+                            i++;
+                        }
+                        beingCreatedDataProvider.addItem(createNewRow(date, step, answer));
+                    }
+                }
+                if (beingCreatedDataProvider.length == 0) {
+                    beingCreatedDataProvider.addItem(createNewRow("", "", ""));
+                }
+                rows = beingCreatedDataProvider;
+            }
+
+            /**
+             * Create new data row
+             */
+            private function createNewRow(date:String, step:String, other:String):SrapExcalationPlanModel {
+                var rowEntry:SrapExcalationPlanModel = new SrapExcalationPlanModel();
+                rowEntry.date = date;
+                rowEntry.step = step;
+                rowEntry.other = other;
+                
+                return rowEntry;
+            }
+
+
+            /**
+             * Add new data range
+             */
+            private function addRange():void {
+                rows.addItem(createNewRow("", "", ""));
+            }
+
+
+            private function getSubText(subQuestion:String, index:int):String {
+                var resultArray:Array = subQuestion.split(SqlUtils.VALUE_DELIMITER);
+
+                if (index >= 0 && index < resultArray.length) {
+                    return resultArray[index];
+                }
+                return "";
+            }
+
+
+            /**
+             * Update report answer from selections. output is "dateRangeIndex|stepTaken|(optional)otherText~"
+             */
+            public function updateAnswer():void {
+                var index:int = 0;
+                var answerValue:String = "";
+
+                for each (var row:SrapExcalationPlanModel in rows) {
+                    answerValue += row.date + SqlUtils.VALUE_DELIMITER;
+                    answerValue += row.step;
+                    // answerValue +=row.other;
+                    
+                    if (row.other) {
+                        answerValue += SqlUtils.VALUE_DELIMITER + row.other;
+                    } 
+
+                    if (index < rows.length - 1 && rows.length > 1) {
+                        answerValue += SqlUtils.SET_DELIMITER;
+                    }
+                    index++;
+                }
+                reportQuestion.questionAnswer = answerValue;
+            }
+        ]]>
+    </mx:Script>
+
+    <!-- Question Number-->
+    <mx:GridItem maxWidth="{QUESTION_NUMBER_CELL_WIDTH}">
+        <mx:Label id="questionNumber" styleName="questionNumber" text="{reportQuestion.questionNumber}"/>
+    </mx:GridItem>
+
+    <!-- Question Text-->
+    <mx:GridItem width="100%">
+        <mx:VBox width="100%">
+            <mx:HBox width="100%" verticalAlign="bottom">
+                <NonSelectableText width="140" text="{getSubText(reportQuestion.questionText, 0)}"
+                    toolTip="{reportQuestion.questionHelp}" fontWeight="normal"/>
+                <NonSelectableText width="100%" text="{getSubText(reportQuestion.questionText, 1)}"
+                    toolTip="{reportQuestion.questionHelp}" fontWeight="normal"/>
+
+            </mx:HBox>
+            <mx:HRule width="100%"/>
+            <ReportDynamicQuestion id="dynamicQuestion" addLabel="+ ADD ROW" dataProvider="{ rows }"
+                removeChild="dynamicQuestion.removeItemAt( event.index )" addChild="addRange()" isEditable="{ isEditable }">
+                <itemRenderer>
+                    <mx:Component>
+                        <itemRenderers:SrapEscalationPlanRenderer escalationEvents="{ outerDocument.escalationEvents }"
+                            escalationWeeks="{ outerDocument.escalationWeeks }" isEditable="{ outerDocument.isEditable }"
+                            updateAnswer="outerDocument.updateAnswer()"/>
+                    </mx:Component>
+                </itemRenderer>
+            </ReportDynamicQuestion>
+            <mx:ToolBar id="cbRows" width="100%"/>
+        </mx:VBox>
+    </mx:GridItem>
+</NotesQuestion>

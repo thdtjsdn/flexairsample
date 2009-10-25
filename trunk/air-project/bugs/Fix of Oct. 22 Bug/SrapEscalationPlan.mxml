@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NotesQuestion xmlns="com.quintiles.views.components.reportQuestions.*" width="100%" xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:code="http://code.google.com/p/flexlib/" xmlns:modals="com.quintiles.views.components.modals.*"
+    creationComplete="creationCompleteHandler()"
+    xmlns:itemRenderers="com.quintiles.views.components.reportQuestions.itemRenderers.*">
+
+    <mx:Script>
+        <![CDATA[
+            import com.quintiles.utils.CometUtils;
+            import com.quintiles.model.QuintilesModelLocator;
+            import com.quintiles.vo.ReportAnswerVO;
+            import com.quintiles.utils.StringUtils;
+            import com.quintiles.utils.SqlUtils;
+            import com.quintiles.views.components.reportQuestions.model.SrapExcalationPlanModel;
+
+            import mx.collections.ArrayCollection;
+
+            /** Selection Collection **/
+            [Bindable]
+            public var escalationWeeks:ArrayCollection;
+
+            /** Addtional information selections **/
+            [Bindable]
+            public var escalationEvents:ArrayCollection;
+
+            /** Collection of addtional rows **/
+            [Bindable]
+            private var rows:ArrayCollection = new ArrayCollection();
+
+
+            /**
+             * Creataion Complete event handler
+             */
+            private function creationCompleteHandler():void {
+                var beingCreatedDataProvider:ArrayCollection = new ArrayCollection();
+                var list:ArrayCollection = reportQuestion.answers;
+                if (list && list.length > 2) {
+                    var total:int = list.length;
+                    // the first one is date, the second one is step, if the step is "Other", the the third will be comments
+                    var i:int = 0;
+                    while (i<total) {
+                        var dateAnswerVO:ReportAnswerVO = list[i] as ReportAnswerVO;
+                        var date:String = dateAnswerVO.questionAnswer;
+                        i ++ ;
+                        var stepAnswerVO:ReportAnswerVO = list[i] as ReportAnswerVO;
+                        var step:String = stepAnswerVO.questionAnswer;
+                        i++;
+                        var answer:String = "";
+                        // if the step is "Other"
+                        if(step == escalationEvents.getItemAt( escalationEvents.length - 1 ).name && i<total) {
+                            var answerVO:ReportAnswerVO = list[i] as ReportAnswerVO;
+                            answer = answerVO.questionAnswer;
+                            i++;
+                            beingCreatedDataProvider.addItem(createNewRow(date, step, answer, [dateAnswerVO, stepAnswerVO, answerVO]));
+                        } else {
+                            beingCreatedDataProvider.addItem(createNewRow(date, step, answer, [dateAnswerVO, stepAnswerVO]));
+                        }
+                        
+                    }
+                }
+                if (beingCreatedDataProvider.length == 0) {
+                    beingCreatedDataProvider.addItem(createNewRow("", "", ""));
+                }
+                rows = beingCreatedDataProvider;
+            }
+
+
+            /**
+             * Create new data row
+             */
+            private function createNewRow(date:String, step:String, other:String, refers:Array = null):SrapExcalationPlanModel {
+                var rowEntry:SrapExcalationPlanModel = new SrapExcalationPlanModel();
+                rowEntry.date = date;
+                rowEntry.step = step;
+                rowEntry.other = other;
+                if(!refers)
+                    refers = [createDefaultAnswer(), createDefaultAnswer()];
+                rowEntry.questions = refers;
+                return rowEntry;
+            }
+
+            public function createDefaultAnswer(answerStr:String = ""):ReportAnswerVO {
+                var answer:ReportAnswerVO = new ReportAnswerVO();
+				answer.questionSequence	= 0;
+				answer.status = CometUtils.STATUS_NEW;
+				// Add properties from the current ReportVO
+				answer.cometId					= QuintilesModelLocator.getInstance().cometModel.report.cometId;
+				answer.communicationReportId	= QuintilesModelLocator.getInstance().cometModel.report.communicationReportId;
+				// Add properties from the ReportQuestionVO
+				answer.questionId		= reportQuestion.questionId;
+				answer.questionNumber	= reportQuestion.questionNumber;
+				answer.questionAnswer = answerStr;
+				return answer;
+            }
+            /**
+             * Add new data range
+             */
+            private function addRange():void {
+                rows.addItem(createNewRow("", "", ""));
+            }
+
+
+            private function getSubText(subQuestion:String, index:int):String {
+                var resultArray:Array = subQuestion.split(SqlUtils.VALUE_DELIMITER);
+
+                if (index >= 0 && index < resultArray.length) {
+                    return resultArray[index];
+                }
+                return "";
+            }
+
+
+            /**
+             * Update report answer from selections. output is "dateRangeIndex|stepTaken|(optional)otherText~"
+             */
+            public function updateAnswer():void {
+                var index:int = 0;
+                var answerValue:String = "";
+                var answers:ArrayCollection = reportQuestion.answers;
+                var i:int = 0;
+                for each (var row:SrapExcalationPlanModel in rows) {
+                    if(!answers) {
+                        answers = new ArrayCollection();
+                        reportQuestion.answers = answers;
+                    }
+                    for each(var ansItem:ReportAnswerVO in row.questions) {
+                        ansItem.questionSequence = i++;
+                        answers.addItem(ansItem);
+                    }
+                }
+            }
+        ]]>
+    </mx:Script>
+
+    <!-- Question Number-->
+    <mx:GridItem maxWidth="{QUESTION_NUMBER_CELL_WIDTH}">
+        <mx:Label id="questionNumber" styleName="questionNumber" text="{reportQuestion.questionNumber}"/>
+    </mx:GridItem>
+
+    <!-- Question Text-->
+    <mx:GridItem width="100%">
+        <mx:VBox width="100%">
+            <mx:HBox width="100%" verticalAlign="bottom">
+                <NonSelectableText width="140" text="{getSubText(reportQuestion.questionText, 0)}"
+                    toolTip="{reportQuestion.questionHelp}" fontWeight="normal"/>
+                <NonSelectableText width="100%" text="{getSubText(reportQuestion.questionText, 1)}"
+                    toolTip="{reportQuestion.questionHelp}" fontWeight="normal"/>
+
+            </mx:HBox>
+            <mx:HRule width="100%"/>
+            <ReportDynamicQuestion id="dynamicQuestion" addLabel="+ ADD ROW" dataProvider="{ rows }"
+                removeChild="dynamicQuestion.removeItemAt( event.index )" addChild="addRange()" isEditable="{ isEditable }">
+                <itemRenderer>
+                    <mx:Component>
+                        <itemRenderers:SrapEscalationPlanRenderer escalationEvents="{ outerDocument.escalationEvents }"
+                            escalationWeeks="{ outerDocument.escalationWeeks }" isEditable="{ outerDocument.isEditable }"
+                            defaultAnswerCreator="{outerDocument.createDefaultAnswer}"
+                            updateAnswer="outerDocument.updateAnswer()"/>
+                    </mx:Component>
+                </itemRenderer>
+            </ReportDynamicQuestion>
+            <mx:ToolBar id="cbRows" width="100%"/>
+        </mx:VBox>
+    </mx:GridItem>
+</NotesQuestion>

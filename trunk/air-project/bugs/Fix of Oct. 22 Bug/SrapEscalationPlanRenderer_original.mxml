@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:code="http://code.google.com/p/flexlib/" xmlns:components="com.quintiles.views.components.*">
+
+    <mx:Metadata>
+		[Event(name="updateAnswer", type="flash.events.Event")]
+	</mx:Metadata>
+    <mx:Script>
+        <![CDATA[
+        	import mx.controls.Alert;
+            import com.quintiles.views.components.reportQuestions.ReportDynamicQuestion;
+            import com.quintiles.views.components.reportQuestions.model.SrapExcalationPlanModel;
+            import mx.collections.ArrayCollection;
+
+            /** Selection Collection **/
+            [Bindable]
+            public var escalationWeeks:ArrayCollection;
+
+            /** Addtional information selections **/
+            [Bindable]
+            public var escalationEvents:ArrayCollection;
+
+            [Bindable]
+            public var isEditable:Boolean;
+
+            [Bindable]
+            private var model:SrapExcalationPlanModel;
+            
+            private static const MAX_ROWS_FOR_COMBO:int = 15; 
+
+
+            override public function set data(value:Object):void {
+                super.data = value;
+                model = SrapExcalationPlanModel(data);
+            }
+
+
+            override protected function commitProperties():void {
+                super.commitProperties();
+
+                if (model) {
+                    for each (var event:Object in escalationEvents) {
+                        if (event.name == model.step) {
+                            steps.selectedItem = event;
+                            break;
+                        }
+                    }
+
+                    for each (var date:Object in escalationWeeks) {
+                        if (date.name == model.date) {
+                            dates.selectedItem = date;
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            private function onSelectedDateChange():void {
+                model.date = dates.selectedLabel;
+                dispatchEvent(new Event(ReportDynamicQuestion.UPDATE_ANSWER));
+            }
+
+
+            private function onSelectedStepChange():void {
+                model.step = steps.selectedLabel;
+                dispatchEvent(new Event(ReportDynamicQuestion.UPDATE_ANSWER));
+            }
+
+
+            private function onOtherChange():void {
+                model.other = other.text;
+                dispatchEvent(new Event(ReportDynamicQuestion.UPDATE_ANSWER));
+            }
+            
+            private function onFocusIn():void
+            {
+            	var deftext:String = "Enter Other";
+            	if(other.text.toUpperCase().toString()==deftext.toUpperCase().toString())
+            	    other.text="";
+            }
+           
+            
+            private function getMaxRowCount():int {
+            	return escalationWeeks.length < MAX_ROWS_FOR_COMBO ? escalationWeeks.length : MAX_ROWS_FOR_COMBO;
+            }
+            
+      
+        ]]>
+    </mx:Script>
+    <mx:ComboBox id="dates" dataProvider="{ escalationWeeks }" labelField="name" prompt="Select date" enabled="{ isEditable }"
+        width="140" rowCount="{getMaxRowCount()}"  change="onSelectedDateChange()"/>
+        
+
+    <mx:VBox>
+
+        <mx:ComboBox id="steps" dataProvider="{ escalationEvents }" labelField="name" prompt="Select step"
+            enabled="{ isEditable }" width="300" rowCount="{ escalationEvents.length }" change="onSelectedStepChange()"/>
+
+        <components:TextAreaDeluxe id="other" prompt="Enter other" text="{ model.other }" width="300"
+            includeInLayout="{ model.step == escalationEvents.getItemAt( escalationEvents.length - 1 ).name }"
+            visible="{ model.step == escalationEvents.getItemAt( escalationEvents.length - 1 ).name }" enabled="{ isEditable }"
+            change="onOtherChange()" focusIn="onFocusIn()" />
+
+    </mx:VBox>
+
+</mx:HBox>

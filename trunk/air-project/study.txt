@@ -1,0 +1,54 @@
+1. ResourceXmlAdapter.as
+   get information from resources.xml, like server url, db local file, etc.
+
+2. CometPM.as
+   1) ReadApplicationConfigurationEvent --> ReadApplicationConfigurationCommand
+   --> ApplicationConfigurationDelegate --> LocalSQLService
+
+   2) NetworkUtils.startSocketMonitor() --> new SocketMonitor(host, port).start() -----
+      --->  NetworkUtils.handleSocketStatus() 
+                     ModelEventDispatcher.dispatchEvent(new NetworkStatusEvent(available))
+                     SyncAllClientToServerEvent.
+      Call networkUtils to connect socketMonitor, and if available, then notify it.
+   3) finalizeApp()
+      InitializeDatabaseConnectionEvent --> QuintilesDatabaseCommand
+        --> QuintilesDatabaseDelegate.createNewDatabase()  -->  CheckUserConfigurationEvent
+        --> QuintilesDatabaseCommand.onUserConfigSqlQueryResult()  
+        --> QuintilesDatabaseDelegate.checkIfUserConfigurationExists()
+        --> DatabaseQueryResultEvent
+             SELECT  USERCONFIGURATION.*,   APPLICATIONCONFIGURATION.KEY AS DATEFORMATKEY,   APPLICATIONCONFIGURATION.VALUE AS DATEFORMAT  FROM    USERCONFIGURATION, APPLICATIONCONFIGURATION WHERE   DATEFORMATKEY = 'DEFAULTDATEFORMAT'
+        --> LocalSQLService.execute()
+      RequestPreferencesEvent --> 
+      ReadLookupCodeEvent --> ReadLookupCodeCommand.execute()  --> LookupCodeDelegate.read()
+        --> DatabaseQueryResultEvent
+                ReadLookupCodeEvent.EVENT_NAME
+                SELECT * FROM LOOKUPCODE 
+        --> LocalSQLService.execute()
+                 ReadApplicationConfigurationEvent "SELECT * FROM APPLICATIONCONFIGURATION"
+           --> LocalSQLService.doResponse()  --> QuintilesDatabaseCommand.onUserConfigSqlQueryResult()
+              //for some reason the local db exists but there's no display name in the USERCONFIG table
+           --> QuintilesDatabaseDelegate.initDataBase("checkUserConfigurationsEvent")   
+              --> CreateDatabaseAsyncEvent --> RebuildDatabaseCommand --> LoginResponseEvent
+              --> DisplayLoginPromptEvent  --> CometPM.promptLogin() --> new LoginModal and show
+          /******** User enter account user/password ****************/
+              --> LoginModal.dispatch(QuintilesLoginEvent)
+              --> CheckESignatureAtApplicationStartupCommand --> ESignatureDelegate.checkESignature()
+                 WebService: QuintilesLoginWebService  
+                        url: .../soap/services/WSCometESignature?wsdl
+                  operation: invoke
+                resultFormat: e4x
+              --> CheckESignatureAtApplicationStartupCommand.result
+
+          
+3. QuintilesDatabaseDelegate.as
+   createNewDatabase() will dispatch CreateDatabaseAsyncEvent event, and also dispatch DisplayLoginPromptEvent.
+
+4. Use local database
+   SyncAllCompleteCommand.refreshLocalData()
+   --> ReadWorkListItemsEvent
+   --> ValidDataBaseExistsEvent
+   --> GetUserPermissionsEvent
+   
+   
+When use local database, the logic will hang there.
+   QuintilesDatabaseCommand.onUserConfigSqlQueryResult() ?
