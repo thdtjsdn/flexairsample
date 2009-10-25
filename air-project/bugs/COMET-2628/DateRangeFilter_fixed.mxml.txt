@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:PopUpButton xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="this.label = getButtonLabel()" openAlways="true">
+    <mx:Script>
+        <![CDATA[
+            import mx.collections.ListCollectionView;
+            import mx.collections.ArrayCollection;
+            import mx.events.CalendarLayoutChangeEvent;
+            import mx.formatters.DateFormatter;
+
+            [Bindable]
+            public var dataSet:ListCollectionView = new ArrayCollection();
+
+            private var _rangeStartSelectedDate:Date;
+
+            private var _rangeEndSelectedDate:Date;
+
+
+            
+            public function get rangeStartSelectedDate():Date {
+                return _rangeStartSelectedDate;
+            }
+
+			[Bindable]	
+            public function set rangeStartSelectedDate(value:Date):void {
+                _rangeStartSelectedDate = value;
+                // fix the bug COMET-2628
+                if(rangeStart.selectedDate != value) { // handle case which date is assigned from outside
+                	rangeStart.selectedDate = value;
+                	if(rangeEnd && rangeEnd.selectableRange == null) { // also adjust end date range.
+                		rangeEnd.selectableRange = setSelectableRange('rangeStart', value);
+                	}
+                }
+                this.label = getButtonLabel();
+            }
+
+
+            
+            public function get rangeEndSelectedDate():Date {
+                return _rangeEndSelectedDate;
+            }
+
+			[Bindable]
+            public function set rangeEndSelectedDate(value:Date):void {
+                _rangeEndSelectedDate = value;
+                // fix the bug COMET-2628
+                if(value != rangeEnd.selectedDate) {  // handle case which date is assigned from outside
+                	rangeEnd.selectedDate = value;
+                	if(rangeStart && rangeStart.selectableRange == null) { // also adjust start date range.
+                		rangeStart.selectableRange = setSelectableRange('rangeEnd', value);
+                	}
+                }
+                this.label = getButtonLabel();
+            }
+
+
+            protected function formatRangeDate(aDate:Date):String {
+                var df:DateFormatter = new DateFormatter();
+
+                df.formatString = "MMM YYYY";
+
+                return df.format(aDate);
+            }
+
+
+            public function rangeStartChange(event:CalendarLayoutChangeEvent):void {
+                rangeStartSelectedDate = rangeStart.selectedDate;
+                dataSet.refresh();
+                // fix the bug COMET-2628, when startDate is bigger than endDate, adjust end one and update label
+                if(rangeStartSelectedDate.getTime() > rangeEndSelectedDate.getTime()) {
+                	rangeEnd.selectedDate = rangeStartSelectedDate;
+                } 
+				rangeEnd.selectableRange = setSelectableRange('rangeStart', rangeStartSelectedDate); 
+				// above code will cause UI go to start point, so reset status
+				rangeEnd.selectedDate = rangeEndSelectedDate;
+            }
+
+
+            public function rangeEndChange(event:CalendarLayoutChangeEvent):void {
+                rangeEndSelectedDate = rangeEnd.selectedDate;
+                dataSet.refresh();
+                // fix the bug COMET-2628, when endDate is smaller than startDate, adjust start one and update label
+                if(rangeEndSelectedDate.getTime() < rangeStartSelectedDate.getTime()) {
+                	rangeStart.selectedDate = rangeEndSelectedDate;
+                }
+                rangeStart.selectableRange = setSelectableRange('rangeEnd', rangeEndSelectedDate);
+                // above code will cause UI go to end point, so reset status
+				rangeStart.selectedDate = rangeStartSelectedDate;
+            }
+
+
+            protected function getButtonLabel():String {
+                if (rangeStartSelectedDate && rangeEndSelectedDate) {
+                    return "Due Date Range: "+ formatRangeDate(rangeStartSelectedDate) + " - " + formatRangeDate(rangeEndSelectedDate);
+                }
+                return "Due Date Range";
+            }
+
+
+            public function isDateWithinRange(itemDate:Date):Boolean {
+                if (itemDate == null) {
+                    return true;
+                } else {
+                    return itemDate.getTime() >= rangeStart.selectedDate.getTime() && itemDate.getTime() <= rangeEnd.selectedDate.getTime();
+                }
+            }
+            
+            /**
+            * Sets the selected ranges according to the last selected date on either date object.
+            */
+            private function setSelectableRange(position : String, date:Date):Object {
+            	//rangeStart.selectableRange = null;
+            	//rangeEnd.selectableRange = null;
+            	var range : Object = {};
+            	range[ position ] = date;
+            	return range;
+            }
+        ]]>
+    </mx:Script>
+    <mx:popUp>
+        <mx:HBox backgroundColor="white" borderColor="#CCCCCC" borderStyle="solid" paddingLeft="6" verticalGap="0"
+            paddingRight="6" paddingTop="6" paddingBottom="6">
+            <mx:DateChooser styleName="mainCalendar" borderThickness="1" borderColor="#e5e5e5" id="rangeStart"
+                change="{rangeStartChange(event)}"/> <!-- selectedDate="{rangeStartSelectedDate}" selectableRange="{setSelectableRange('rangeEnd',rangeEnd.selectedDate)}" /-->
+            <mx:DateChooser styleName="mainCalendar" borderThickness="1" borderColor="#e5e5e5" id="rangeEnd"
+                change="{rangeEndChange(event)}" />  <!-- selectedDate="{rangeEndSelectedDate}" selectableRange="{setSelectableRange('rangeStart',rangeStart.selectedDate)}"/-->
+        </mx:HBox>
+    </mx:popUp>
+</mx:PopUpButton>
