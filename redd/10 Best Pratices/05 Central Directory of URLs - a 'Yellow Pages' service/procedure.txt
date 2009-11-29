@@ -1,0 +1,8 @@
+Original brief from Xavi
+ 
+1. Provide high level diagrams and concepts on how a yellow pages service would work
+2. Explain how a Yellow pages service would work together with Dynamic service configuration
+3. Explain that there’s no extra security in this approach since URLs are still public and sniffable
+4. Introduce problematic of async initialization.
+NOTE: Only the flow will be demonstrated a definitive implementation won’t be provided for the Yellow
+Pages Service

@@ -1,0 +1,8 @@
+Original brief from Xavi:
+
+1. Introduction to problem
+2. Step by step on how to declaratively instantiate a RemoteObject.
+NOTE: Architectural best practices won’t be considered here. It’ll give an example on the required code
+to dynamically instantiate a RemoteObject.
+ 
+PBH - uploaded PDF and .pages file with formatting common to other guides

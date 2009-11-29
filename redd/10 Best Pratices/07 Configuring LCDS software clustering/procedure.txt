@@ -1,0 +1,8 @@
+original brief from Xavi:
+1. Provide configuration hints to configure LCDS to work in a cluster
+2. JGroups
+ 
+N.B. - we will reuse Tom Sugden's guide published here
+ 
+ 
+Attached document is a formatted version of Tom's step-by-step piece, with reference to LCDS 2.5 beta removed
