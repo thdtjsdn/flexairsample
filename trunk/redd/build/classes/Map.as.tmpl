@@ -1,0 +1,34 @@
+package com.architech.maps
+{
+	import mx.modules.ModuleBase;
+
+	public class ${CLASS_NAME} extends ModuleBase implements IMap
+	{
+		public function ${CLASS_NAME}() {
+			super();
+		}
+		
+${GENERATED_VARIABLES}
+		
+		
+		// INTERFACE FUNCTIONS
+		public function get num():uint {
+			return _num;
+		}
+		public function get offsetX():Number {
+			return _offsetX;
+		}
+		public function get offsetY():Number {
+			return _offsetY;
+		}
+		public function get multiplier():Number {
+			return _multiplier;
+		}
+		public function getShape(index:uint):Array {
+			return (index < _num) ? this["_points_"+index] : null;
+		}
+		public function getName(index:uint):String {
+			return (index < _num) ? this["_names_"+index] : null;
+		}
+	}
+}
