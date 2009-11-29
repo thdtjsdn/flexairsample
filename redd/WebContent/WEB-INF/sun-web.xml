@@ -1,0 +1,26 @@
+<!DOCTYPE sun-web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Application Server 8.1 Servlet 2.4//EN" "http://www.sun.com/software/appserver/dtds/sun-web-app_2_4-1.dtd">
+<!-- Copyright 2006 Sun Microsystems, Inc. All rights reserved. -->
+<sun-web-app>
+	<security-role-mapping>
+		<role-name>user</role-name>
+		<group-name>user</group-name>
+	</security-role-mapping>
+	<security-role-mapping>
+		<role-name>admin</role-name>
+		<group-name>admin</group-name>
+	</security-role-mapping>
+	<!-- <session-config>
+		<session-manager/>
+	</session-config>
+	<cache enabled="true" timeout-in-seconds="300">
+		<cache-mapping>
+			<servlet-name>ServCache</servlet-name>
+			<key-field name="inputtext" scope="request.parameter"/>
+			<constraint-field name="inputtext" scope="request.parameter">
+				<constraint-field-value>one</constraint-field-value>
+				<constraint-field-value>two</constraint-field-value>
+			</constraint-field>
+		</cache-mapping>
+	</cache> -->
+	<property name="valve_1" value="com.anachronymous.glassfish.TomcatValve"/>
+</sun-web-app>

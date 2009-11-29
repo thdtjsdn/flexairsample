@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="remoting-service" 
+    class="flex.messaging.services.RemotingService">
+
+    <adapters>
+        <adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true"/>
+    </adapters>
+	
+    <default-channels>
+        <channel ref="my-amf" />
+    </default-channels>
+	
+	<!-- <destination id="hello-world">
+		<properties>
+			<source>test.HelloWorld</source>
+			<scope>application</scope>
+		</properties>
+	</destination> -->
+	
+	<destination id="spm-query-engine">
+		<properties>
+			<source>com.architech.spm.services.QueryEngine</source>
+			<scope>application</scope>
+		</properties>
+    	<security>
+    		<security-constraint ref="user"/>
+    	</security>
+	</destination>
+	
+	<destination id="spm-dashboards">
+		<properties>
+			<source>com.architech.spm.services.Dashboards</source>
+			<scope>application</scope>
+		</properties>
+    	<security>
+    		<security-constraint ref="user"/>
+    	</security>
+	</destination>
+
+</service>

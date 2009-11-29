@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+	<display-name>test1</display-name>
+	
+	<!-- Http Flex Session attribute and binding listener support -->
+	<listener>
+		<listener-class>flex.messaging.HttpFlexSession</listener-class>
+	</listener>
+
+	<!-- MessageBroker Servlet -->
+	<servlet>
+		<display-name>MessageBrokerServlet</display-name>
+		<servlet-name>MessageBrokerServlet</servlet-name>
+		<servlet-class>flex.messaging.MessageBrokerServlet</servlet-class>
+		<init-param>
+			<param-name>services.configuration.file</param-name>
+			<param-value>/WEB-INF/flex/services-config.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<login-config>
+		<auth-method>BASIC</auth-method> 
+		<realm-name>spmRealm</realm-name> 
+	</login-config>
+	
+	<!-- <security-constraint>
+		<display-name>SecurityConstraint</display-name>
+			<web-resource-collection>
+				<web-resource-name>SPMCollection</web-resource-name>
+				<url-pattern>/CommunicationsService</url-pattern>
+				<url-pattern>/DashboardService</url-pattern>
+				<url-pattern>/QueryEngineService</url-pattern>
+			</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+		<user-data-constraint>
+			<transport-guarantee>NONE</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint> -->
+	
+	<security-role> 
+		<role-name>user</role-name> 
+	</security-role> 
+	<security-role> 
+		<role-name>admin</role-name> 
+	</security-role>
+	
+	<servlet-mapping>
+		<servlet-name>MessageBrokerServlet</servlet-name>
+		<url-pattern>/messagebroker/*</url-pattern>
+	</servlet-mapping>
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>default.html</welcome-file>
+		<welcome-file>default.htm</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+	</welcome-file-list>
+</web-app>
