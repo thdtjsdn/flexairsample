@@ -1,0 +1,6 @@
+Original brief from Xavi:
+1. Information on cross domain security policies
+2. Step by step example on how to configure 2 webapps, one distributing 1 swf and the other distributing
+java services. Both apps would be deployed on different servers.
+ 
+PBH - added formatted pdf and .pages file
