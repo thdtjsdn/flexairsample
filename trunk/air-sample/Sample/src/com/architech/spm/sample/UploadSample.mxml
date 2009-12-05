@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+		    private var fileToOpen:File;
+		    private function browser():void {
+			    fileToOpen = File.documentsDirectory; 
+			    selectTextFile(fileToOpen); 
+		    }
+		    
+			private function selectTextFile(root:File):void 
+			{ 
+			    var txtFilter:FileFilter = new FileFilter("Text", "*.as;*.css;*.html;*.txt;*.xml"); 
+			    root.browseForOpen("Open", [txtFilter]); 
+			    root.addEventListener(Event.SELECT, fileSelected); 
+			} 
+			 
+			private function fileSelected(event:Event):void 
+			{ 
+			    filepath.text =fileToOpen.nativePath; 
+			    var myFile:File = File.documentsDirectory.resolvePath(filepath.text); 
+				var myFileStream:FileStream = new FileStream(); 
+				myFileStream.addEventListener(Event.COMPLETE, completeHandler); 
+				myFileStream.openAsync(myFile, FileMode.READ); 
+			} 
+			 
+			function completeHandler(event:Event):void  
+			{ 
+				var myFileStream:FileStream = event.currentTarget as FileStream;
+				var bytes:ByteArray = new ByteArray(); 
+			    myFileStream.readBytes(bytes, 0, myFileStream.bytesAvailable); 
+			    content.text = bytes.toString();
+			} 
+			
+		]]>
+	</mx:Script>
+	<mx:HBox width="100%" horizontalGap="2" verticalGap="2">
+		<mx:Label text="File: "/>
+		<mx:TextInput width="100%" id="filepath"/>
+		<mx:Button label="Browser..." click="browser()"/>
+	</mx:HBox>
+	<mx:VBox label="Content" width="100%" height="100%" horizontalGap="2" verticalGap="2">
+		<mx:TextArea id="content" width="100%" height="100%"/>
+	</mx:VBox>
+	
+</mx:Box>
