@@ -1,0 +1,1 @@
+it is a sample project for flex and AIR.
